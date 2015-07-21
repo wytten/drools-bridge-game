@@ -1,0 +1,56 @@
+package org.wyttenbach.dale.drools;
+
+import java.util.List;
+
+rule "bid1n"
+salience 300
+	when
+		$auction : Auction( $currentBidder : currentBidder != null )
+		Hand( owner.equals($currentBidder), highCardPoints >= 15 && isBalanced())
+	then
+  		$auction.bid($currentBidder, new Bid(1, null));
+   		drools.halt();
+end
+
+rule "bid1s"
+salience 200
+	when
+		$auction : Auction( $currentBidder : currentBidder != null )
+		Hand( owner.equals($currentBidder), getTotalPoints(Suit.SPADES) >= 13 && getCards(Suit.SPADES).size() >= 5)
+	then
+  		$auction.bid($currentBidder, new Bid(1, Suit.SPADES));
+    	drools.halt();
+end
+
+rule "bid1h"
+salience 199
+	when
+		$auction : Auction( $currentBidder : currentBidder != null )
+		Hand( owner.equals($currentBidder), getTotalPoints(Suit.HEARTS) >= 13 && getCards(Suit.HEARTS).size() >= 5)
+	then
+  		$auction.bid($currentBidder, new Bid(1, Suit.HEARTS));
+    	drools.halt();
+end
+
+rule "bid1minor"
+salience 100
+	
+	when
+		$auction : Auction( $currentBidder : currentBidder != null )
+		$hand : Hand( owner.equals($currentBidder), getTotalPoints(getLongestSuit()) >= 13 )
+	then
+  		$auction.bid($currentBidder, new Bid(1, $hand.getLongestSuit()));
+   		drools.halt();
+end
+
+rule "bidpass"
+salience 1
+	
+	when
+		$auction : Auction( $currentBidder : currentBidder != null )
+		Hand(owner.equals($currentBidder))
+	then
+  		$auction.bid($currentBidder, new Pass());
+   		drools.halt();
+end
+

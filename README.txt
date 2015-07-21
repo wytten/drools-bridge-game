@@ -1,0 +1,1 @@
+See also http://www.mastertheboss.com/drools/drools-and-maven-example-project
