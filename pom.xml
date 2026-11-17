@@ -88,4 +88,25 @@
             <!-- </dependency> -->
         </dependencies>
     </dependencyManagement>
+    <profiles>
+        <!-- Drools 5.5's MVEL references java.lang.Compiler, which was removed in JDK 21.
+             When building on JDK 21+, run tests on an older JDK: -Dtest.java.home=/path/to/jdk11 -->
+        <profile>
+            <id>jdk21-plus</id>
+            <activation>
+                <jdk>[21,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <jvm>${test.java.home}/bin/java</jvm>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
