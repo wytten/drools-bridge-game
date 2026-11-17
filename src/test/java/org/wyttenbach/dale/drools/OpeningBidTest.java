@@ -11,27 +11,29 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.drools.KnowledgeBase;
-import org.drools.KnowledgeBaseConfiguration;
-import org.drools.KnowledgeBaseFactory;
-import org.drools.builder.KnowledgeBuilder;
-import org.drools.builder.KnowledgeBuilderFactory;
-import org.drools.builder.ResourceType;
-import org.drools.command.Command;
-import org.drools.command.CommandFactory;
-import org.drools.conf.SequentialOption;
-import org.drools.io.ResourceFactory;
-import org.drools.runtime.StatelessKnowledgeSession;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.kie.api.KieBase;
+import org.kie.api.KieBaseConfiguration;
+import org.kie.api.KieServices;
+import org.kie.api.builder.KieBuilder;
+import org.kie.api.builder.KieFileSystem;
+import org.kie.api.builder.Message;
+import org.kie.api.command.Command;
+import org.kie.api.command.KieCommands;
+import org.kie.api.conf.SequentialOption;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.StatelessKieSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class OpeningBidTest {
   private final static Logger LOG = LoggerFactory.getLogger(OpeningBidTest.class);
   
-  static StatelessKnowledgeSession session;
+  static KieServices kieServices;
+
+  static StatelessKieSession session;
 
   private Deal deal;
 
@@ -39,19 +41,22 @@ public class OpeningBidTest {
 
   @BeforeClass
   public static void setUpClass() throws Exception {
-    KnowledgeBuilder builder = KnowledgeBuilderFactory.newKnowledgeBuilder();
-    builder.add(ResourceFactory.newClassPathResource("bidding.drl"), ResourceType.DRL);
-    if (builder.hasErrors()) {
-      throw new RuntimeException(builder.getErrors().toString());
+    kieServices = KieServices.Factory.get();
+    KieFileSystem fileSystem = kieServices.newKieFileSystem();
+    fileSystem.write("src/main/resources/org/wyttenbach/dale/drools/bidding.drl",
+        kieServices.getResources().newClassPathResource("bidding.drl", OpeningBidTest.class));
+    KieBuilder builder = kieServices.newKieBuilder(fileSystem).buildAll();
+    if (builder.getResults().hasMessages(Message.Level.ERROR)) {
+      throw new RuntimeException(builder.getResults().toString());
     }
 
-    KnowledgeBaseConfiguration configuration = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+    KieBaseConfiguration configuration = kieServices.newKieBaseConfiguration();
     configuration.setOption(SequentialOption.YES);
 
-    KnowledgeBase knowledgeBase = KnowledgeBaseFactory.newKnowledgeBase(configuration);
-    knowledgeBase.addKnowledgePackages(builder.getKnowledgePackages());
+    KieContainer container = kieServices.newKieContainer(kieServices.getRepository().getDefaultReleaseId());
+    KieBase knowledgeBase = container.newKieBase(configuration);
 
-    session = knowledgeBase.newStatelessKnowledgeSession();
+    session = knowledgeBase.newStatelessKieSession();
   }
 
   @Before
@@ -117,10 +122,10 @@ public class OpeningBidTest {
 
   private void execute(Hand hand) {
     LOG.info(""+hand);
-    @SuppressWarnings("rawtypes")
-    List<Command> commands = new ArrayList<Command>();
-    commands.add(CommandFactory.newInsertElements(getFacts(hand)));
-    session.execute(CommandFactory.newBatchExecution(commands));
+    KieCommands kieCommands = kieServices.getCommands();
+    List<Command<?>> commands = new ArrayList<Command<?>>();
+    commands.add(kieCommands.newInsertElements(getFacts(hand)));
+    session.execute(kieCommands.newBatchExecution(commands));
   }
 
   private void assertBid(Hand hand, Bid bid) {

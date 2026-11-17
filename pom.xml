@@ -8,67 +8,40 @@
     <url>http://maven.apache.org</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <drools.ver>5.5.0.Final</drools.ver>
+        <maven.compiler.release>17</maven.compiler.release>
+        <drools.ver>10.2.0</drools.ver>
     </properties>
     <dependencies>
         <dependency>
             <groupId>org.drools</groupId>
-            <artifactId>drools-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.drools</groupId>
-            <artifactId>drools-compiler</artifactId>
+            <artifactId>drools-engine-classic</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>1.6.4</version>
-			<scope>runtime</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.20</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.thoughtworks.xstream</groupId>
-                <artifactId>xstream</artifactId>
-                <version>1.4.21</version>
-            </dependency>
-            <dependency>
                 <groupId>org.drools</groupId>
-                <artifactId>drools-api</artifactId>
+                <artifactId>drools-bom</artifactId>
                 <version>${drools.ver}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.drools</groupId>
-                <artifactId>drools-core</artifactId>
-                <version>${drools.ver}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.drools</groupId>
-                <artifactId>drools-compiler</artifactId>
-                <version>${drools.ver}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.drools</groupId>
-                <artifactId>drools-ant</artifactId>
-                <version>${drools.ver}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.drools</groupId>
-                <artifactId>drools-server</artifactId>
-                <version>${drools.ver}</version>
-                <type>war</type>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.11</version>
+                <version>4.13.2</version>
             </dependency>
             <!-- <dependency> -->
             <!--   <groupId>org.drools</groupId> -->
@@ -93,49 +66,18 @@
             <!-- </dependency> -->
         </dependencies>
     </dependencyManagement>
-    <profiles>
-        <!-- Drools 5.5's MVEL references java.lang.Compiler, which was removed in JDK 21.
-             On JDK 21+, compile an empty stub of it and patch it into java.base for tests. -->
-        <profile>
-            <id>jdk21-plus</id>
-            <activation>
-                <jdk>[21,)</jdk>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>compile-jdk-patch</id>
-                                <phase>process-test-classes</phase>
-                                <goals>
-                                    <goal>compile</goal>
-                                </goals>
-                                <configuration>
-                                    <release>21</release>
-                                    <compileSourceRoots>
-                                        <compileSourceRoot>${project.basedir}/src/jdk-patch</compileSourceRoot>
-                                    </compileSourceRoots>
-                                    <outputDirectory>${project.build.directory}/jdk-patch</outputDirectory>
-                                    <compilerArgs>
-                                        <arg>--patch-module</arg>
-                                        <arg>java.base=${project.basedir}/src/jdk-patch</arg>
-                                    </compilerArgs>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <argLine>--patch-module java.base=${project.build.directory}/jdk-patch --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.16.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.6.1</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>
